@@ -1,0 +1,31 @@
+{
+  "name": "cabinet-studio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "test": "npm run test:logic && npm run test:ui && npm run test:scene",
+    "test:logic": "node scripts/logic.test.mjs",
+    "test:ui": "vite build --ssr scripts/ssr-check.jsx --config vite.test.config.js --logLevel error && node .ssr-check/ssr-check.js",
+    "test:scene": "vite build --ssr scripts/scene.test.jsx --config vite.test.config.js --logLevel error && node .ssr-check/scene.test.js"
+  },
+  "dependencies": {
+    "@react-three/drei": "9.114.3",
+    "@react-three/fiber": "8.17.10",
+    "@react-three/postprocessing": "2.16.3",
+    "framer-motion": "11.11.9",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "three": "0.169.0",
+    "vazirmatn": "33.0.3",
+    "zustand": "4.5.5"
+  },
+  "devDependencies": {
+    "@react-three/test-renderer": "^8.1.3",
+    "@vitejs/plugin-react": "4.3.2",
+    "vite": "5.4.9"
+  }
+}

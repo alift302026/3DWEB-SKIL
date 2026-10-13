@@ -1,0 +1,842 @@
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("../assets/fonts/Vazirmatn-var.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #07090c;
+  --panel: rgba(16, 19, 24, 0.74);
+  --panel-solid: #12161c;
+  --stroke: rgba(255, 255, 255, 0.09);
+  --stroke-strong: rgba(255, 255, 255, 0.16);
+  --text: #eef1f6;
+  --muted: #8f98a5;
+  --accent: #5ad1ff;
+  --accent-2: #ffb45a;
+  --good: #6fe3a8;
+  --warn: #ff8f6b;
+  --r: 16px;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Vazirmatn", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  overflow: hidden;
+  font-feature-settings: "ss01";
+}
+
+#root {
+  position: fixed;
+  inset: 0;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+input,
+select {
+  font-family: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* ---------- اسکرول‌بار ---------- */
+.scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+.scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 99px;
+}
+.scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------- لایه بوم ---------- */
+.stage {
+  position: absolute;
+  inset: 0;
+}
+.stage canvas {
+  display: block;
+  touch-action: none;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 10%, transparent 40%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* ---------- نوار بالا ---------- */
+.topbar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  left: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+  z-index: 20;
+}
+.topbar > * {
+  pointer-events: auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px 9px 14px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: var(--shadow);
+}
+.brand .logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(140deg, var(--accent), #7c5cff 55%, var(--accent-2));
+  color: #06080b;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.brand b {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+.brand span {
+  font-size: 11px;
+  color: var(--muted);
+  display: block;
+  margin-top: -2px;
+}
+
+.glass {
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: var(--shadow);
+  border-radius: var(--r);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 999px;
+  margin-inline-start: auto;
+}
+.tbtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  transition: 0.18s ease;
+  position: relative;
+}
+.tbtn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+}
+.tbtn.on {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+}
+.tbtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.tbtn[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: 44px;
+  right: 50%;
+  transform: translateX(50%);
+  background: #0d1015;
+  border: 1px solid var(--stroke);
+  color: var(--text);
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+  z-index: 5;
+}
+
+.seg {
+  display: flex;
+  padding: 4px;
+  gap: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--stroke);
+}
+.seg button {
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.seg button.active {
+  background: linear-gradient(140deg, color-mix(in srgb, var(--accent) 85%, #fff), #7c5cff);
+  color: #06080b;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+/* ---------- پنل کناری ---------- */
+.sidebar {
+  position: absolute;
+  top: 74px;
+  bottom: 14px;
+  right: 14px;
+  width: 352px;
+  display: flex;
+  flex-direction: column;
+  z-index: 15;
+  overflow: hidden;
+}
+.tabs {
+  display: flex;
+  gap: 2px;
+  padding: 6px;
+  border-bottom: 1px solid var(--stroke);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+.tabs button {
+  flex: 1 0 auto;
+  padding: 9px 6px;
+  border-radius: 11px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: 0.18s;
+  white-space: nowrap;
+}
+.tabs button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+.tabs button.active {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+}
+.panel-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+}
+
+.card {
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.028);
+  padding: 12px;
+}
+.card > h4 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.card > h4 .hint {
+  margin-inline-start: auto;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.muted {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.spacer {
+  flex: 1;
+}
+
+/* ---------- اسلایدر ---------- */
+.slider {
+  margin: 8px 0 2px;
+}
+.slider .head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.slider .head b {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 22px;
+  background: transparent;
+  direction: ltr;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 5px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--accent) var(--p, 50%), rgba(255, 255, 255, 0.12) var(--p, 50%));
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5.5px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--accent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  cursor: grab;
+  transition: transform 0.15s;
+}
+input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.18);
+}
+input[type="range"]::-moz-range-track {
+  height: 5px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.12);
+}
+input[type="range"]::-moz-range-progress {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--accent);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--accent);
+}
+
+/* ---------- سواچ رنگ ---------- */
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+  gap: 8px;
+}
+.swatch {
+  aspect-ratio: 1;
+  border-radius: 11px;
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  position: relative;
+  transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.4), box-shadow 0.2s;
+}
+.swatch:hover {
+  transform: translateY(-3px) scale(1.06);
+}
+.swatch.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent), 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+.swatch.active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 99px;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- کارت گزینه ---------- */
+.opts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.opt {
+  text-align: right;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  padding: 9px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  transition: 0.18s;
+  position: relative;
+  overflow: hidden;
+}
+.opt:hover {
+  background: rgba(255, 255, 255, 0.07);
+  transform: translateY(-2px);
+}
+.opt.active {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.opt b {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+}
+.opt small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+.opt .tag {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 99px;
+  background: linear-gradient(120deg, var(--accent-2), #ff7a59);
+  color: #20140a;
+  font-weight: 800;
+}
+.opt .preview {
+  height: 34px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ---------- سوئیچ ---------- */
+.switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 2px;
+  font-size: 12.5px;
+  width: 100%;
+}
+.switch .track {
+  width: 40px;
+  height: 22px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.12);
+  position: relative;
+  transition: 0.22s;
+  flex: 0 0 auto;
+}
+.switch .knob {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 99px;
+  background: #fff;
+  transition: 0.22s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.switch.on .track {
+  background: linear-gradient(120deg, var(--accent), #7c5cff);
+}
+.switch.on .knob {
+  right: 21px;
+}
+
+/* ---------- دکمه ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--stroke);
+  transition: 0.18s;
+}
+.btn:hover {
+  background: rgba(255, 255, 255, 0.11);
+}
+.btn.primary {
+  background: linear-gradient(130deg, var(--accent), #7c5cff);
+  color: #06080b;
+  border-color: transparent;
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.btn.ghost {
+  background: transparent;
+}
+.btn.danger {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 35%, transparent);
+}
+.btn.sm {
+  padding: 7px 10px;
+  font-size: 11.5px;
+  border-radius: 10px;
+}
+.btn.wide {
+  width: 100%;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--stroke);
+  color: var(--muted);
+  transition: 0.16s;
+}
+.icon-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.12);
+}
+.icon-btn:disabled {
+  opacity: 0.3;
+}
+
+/* ---------- لیست یونیت‌ها ---------- */
+.unit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.unit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  font-size: 12px;
+}
+.unit-row:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+.unit-row.sel {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.unit-row .grip {
+  color: var(--muted);
+  cursor: grab;
+  touch-action: none;
+}
+.unit-row .w {
+  margin-inline-start: auto;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+}
+
+/* ---------- پلان ---------- */
+.plan {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  width: 330px;
+  z-index: 15;
+  overflow: hidden;
+}
+.plan header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--stroke);
+  font-size: 12px;
+  font-weight: 700;
+}
+.plan svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.plan .foot {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px 12px;
+  font-size: 11px;
+  color: var(--muted);
+  align-items: center;
+}
+
+/* ---------- قیمت ---------- */
+.price {
+  position: absolute;
+  left: 14px;
+  top: 74px;
+  width: 260px;
+  padding: 12px 14px;
+  z-index: 14;
+}
+.price .val {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(120deg, #fff, var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.price .lines {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+.price.open .lines {
+  max-height: 260px;
+  overflow-y: auto;
+}
+.price .line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  gap: 8px;
+}
+.price .line b {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* ---------- دوربین ---------- */
+.views {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  border-radius: 999px;
+  z-index: 14;
+}
+.views button {
+  padding: 8px 13px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.views button:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+}
+.views button.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+}
+
+/* ---------- راهنما ---------- */
+.hint-pill {
+  position: absolute;
+  bottom: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 14;
+  max-width: 70vw;
+  text-align: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+@media (max-width: 1180px) {
+  .plan {
+    display: none;
+  }
+  .hint-pill {
+    display: none;
+  }
+}
+
+/* ---------- تگ سه‌بعدی ---------- */
+.tag3d {
+  background: rgba(9, 12, 16, 0.82);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  color: #dff4ff;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  font-family: "Vazirmatn", sans-serif;
+}
+
+/* ---------- تست ---------- */
+.toasts {
+  position: absolute;
+  top: 74px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 40;
+  pointer-events: none;
+}
+.toast {
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: rgba(12, 15, 20, 0.9);
+  border: 1px solid var(--stroke-strong);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+}
+.toast.warn {
+  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+  color: #ffd9cb;
+}
+
+/* ---------- لودر ---------- */
+.loader {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 40%, #141922, #05070a 70%);
+}
+.loader .inner {
+  text-align: center;
+  width: min(320px, 80vw);
+}
+.loader .cube {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 18px;
+  border-radius: 14px;
+  background: linear-gradient(140deg, var(--accent), #7c5cff 60%, var(--accent-2));
+  box-shadow: 0 0 40px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.loader h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 800;
+}
+.loader p {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.bar {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #7c5cff);
+  border-radius: 99px;
+}
+
+/* ---------- موبایل ---------- */
+@media (max-width: 860px) {
+  .sidebar {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: auto;
+    height: 62vh;
+    border-radius: 22px 22px 0 0;
+  }
+  .price {
+    display: none;
+  }
+  .views {
+    bottom: calc(62vh + 10px);
+    max-width: 94vw;
+    overflow-x: auto;
+  }
+  .topbar {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+  }
+  .brand span {
+    display: none;
+  }
+}
