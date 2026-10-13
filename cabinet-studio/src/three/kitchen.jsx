@@ -1,41 +1,21 @@
 import * as THREE from "three";
-import { useMemo, useState, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
-import { RoundedBox } from "@react-three/drei";
+import { useMemo, useState } from "react";
 import { useStudio } from "../store/useStudio.js";
-import { C, computeLayout, computeCounter, isTall, cm, faNum, drawerHeights } from "../lib/layout.js";
+import { C, computeLayout, computeCounter, isTall, drawerHeights } from "../lib/layout.js";
 import { buildCounterGeometry } from "../lib/counterGeometry.js";
 import { byId, DOOR_STYLES, DOOR_COLORS, COUNTERTOPS, BODY_COLORS } from "../data/catalog.js";
 import { stoneTexture, woodTexture, noiseTexture } from "../lib/textures.js";
-import { Carcase, DoorLeaf, Shelf, LedStrip, SelectionFrame, damp } from "./parts.jsx";
+import { Carcase, DoorLeaf, Shelf, LedStrip, SelectionFrame } from "./parts.jsx";
+import { Drawer } from "./Drawer.jsx";
 import { Sink, Hob, Oven, Hood, Fridge, Dishwasher } from "./appliances.jsx";
 
 /* ---------------- ابزارها ---------------- */
 
 /* ---------------- کشو ---------------- */
 
-function DrawerFront({ w, h, y, styleDef, hex, handleId, handleFinish, open, onClick }) {
-  const ref = useRef();
-  const pull = open ? 0.26 : 0;
-  useFrame((_, dt) => {
-    if (ref.current) ref.current.position.z = damp(ref.current.position.z, pull, Math.min(1, dt * 8), 6);
-  });
-  return (
-    <group ref={ref} position={[0, y, C.depth / 2 + 0.001]}>
-      <group onClick={onClick}>
-        <DoorLeaf w={w} h={h} styleDef={styleDef} hex={hex} handleId={handleId} handleFinish={handleFinish} hinge="right" open={0} handleY={0} />
-        <mesh position={[0, 0, -0.02]} visible={!!open}>
-          <boxGeometry args={[w - 0.04, h - 0.04, 0.01]} />
-          <meshStandardMaterial color="#d9d5cc" roughness={0.7} />
-        </mesh>
-      </group>
-    </group>
-  );
-}
-
 /* ---------------- یک یونیت ---------------- */
 
-function Unit({ it, k, lighting, doorHex, bodyHex, styleDef, selected, onSelect, onToggle }) {
+function Unit({ it, k, lighting, doorHex, bodyHex, styleDef, selected, onSelect, onPart }) {
   const w = it.width - 0.004;
   const d = C.depth;
   const tall = isTall(it);
@@ -43,12 +23,18 @@ function Unit({ it, k, lighting, doorHex, bodyHex, styleDef, selected, onSelect,
   const cy = C.toe + bodyH / 2;
   const [hover, setHover] = useState(false);
 
+  const part = (key) => it.parts?.[key] ?? it.open;
+  const clickPart = (key) => (e) => {
+    e.stopPropagation();
+    if (e.delta > 5) return;
+    onPart(key);
+  };
   const doorProps = {
     styleDef,
     hex: doorHex,
     handleId: k.handle,
     handleFinish: k.handleFinish,
-    onClick: onSelect,
+    z: d / 2 + 0.001,
   };
 
   // لت‌های یونیت ایستاده باید در ارتفاع درست قرار بگیرند
@@ -57,14 +43,13 @@ function Unit({ it, k, lighting, doorHex, bodyHex, styleDef, selected, onSelect,
       const split = 1.45;
       const botH = split - C.toe - 0.006;
       const topH = C.tallH - split - 0.006;
-      const open = it.open ? 1 : 0;
       return (
         <>
           <group position={[0, C.toe + botH / 2, 0]}>
-            <DoorLeaf {...doorProps} w={w - 0.006} h={botH} hinge="right" open={open} verticalHandle />
+            <DoorLeaf {...doorProps} w={w - 0.006} h={botH} hinge="right" open={part("tall-bottom")} onClick={clickPart("tall-bottom")} verticalHandle />
           </group>
           <group position={[0, split + topH / 2, 0]}>
-            <DoorLeaf {...doorProps} w={w - 0.006} h={topH} hinge="right" open={open} verticalHandle />
+            <DoorLeaf {...doorProps} w={w - 0.006} h={topH} hinge="right" open={part("tall-top")} onClick={clickPart("tall-top")} verticalHandle />
           </group>
         </>
       );
@@ -73,25 +58,24 @@ function Unit({ it, k, lighting, doorHex, bodyHex, styleDef, selected, onSelect,
       const topH = C.tallH - 1.24 - 0.006;
       return (
         <group position={[0, 1.24 + topH / 2, 0]}>
-          <DoorLeaf {...doorProps} w={w - 0.006} h={topH} hinge="right" open={it.open ? 1 : 0} verticalHandle />
+          <DoorLeaf {...doorProps} w={w - 0.006} h={topH} hinge="right" open={part("oven-top")} onClick={clickPart("oven-top")} verticalHandle />
         </group>
       );
     }
     if (it.type === "door" || it.type === "sink") {
-      const open = it.open ? 1 : 0;
       return (
         <group position={[0, cy, 0]}>
           {it.double ? (
             <>
               <group position={[-w / 4, 0, 0]}>
-                <DoorLeaf {...doorProps} w={w / 2 - C.gap * 2} h={bodyH - 0.01} hinge="left" open={open} />
+                <DoorLeaf {...doorProps} w={w / 2 - C.gap * 2} h={bodyH - 0.01} hinge="left" open={part("base-left")} onClick={clickPart("base-left")} />
               </group>
               <group position={[w / 4, 0, 0]}>
-                <DoorLeaf {...doorProps} w={w / 2 - C.gap * 2} h={bodyH - 0.01} hinge="right" open={open} />
+                <DoorLeaf {...doorProps} w={w / 2 - C.gap * 2} h={bodyH - 0.01} hinge="right" open={part("base-right")} onClick={clickPart("base-right")} />
               </group>
             </>
           ) : (
-            <DoorLeaf {...doorProps} w={w - 0.006} h={bodyH - 0.01} hinge="right" open={open} />
+            <DoorLeaf {...doorProps} w={w - 0.006} h={bodyH - 0.01} hinge="right" open={part("base-right")} onClick={clickPart("base-right")} />
           )}
         </group>
       );
@@ -100,7 +84,7 @@ function Unit({ it, k, lighting, doorHex, bodyHex, styleDef, selected, onSelect,
       const dh = 0.2;
       return (
         <group position={[0, C.toe + (bodyH - dh - 0.012) / 2, 0]}>
-          <DoorLeaf {...doorProps} w={w - 0.006} h={bodyH - dh - 0.012} hinge="right" open={it.open ? 1 : 0} />
+          <DoorLeaf {...doorProps} w={w - 0.006} h={bodyH - dh - 0.012} hinge="right" open={part("base-right")} onClick={clickPart("base-right")} />
         </group>
       );
     }
@@ -114,18 +98,14 @@ function Unit({ it, k, lighting, doorHex, bodyHex, styleDef, selected, onSelect,
         e.stopPropagation();
         onSelect(e);
       }}
-      onDoubleClick={(e) => {
-        e.stopPropagation();
-        onToggle();
-      }}
       onPointerOver={(e) => {
         e.stopPropagation();
         setHover(true);
-        document.body.style.cursor = "pointer";
+        if (typeof document !== "undefined") document.body.style.cursor = "pointer";
       }}
       onPointerOut={() => {
         setHover(false);
-        document.body.style.cursor = "auto";
+        if (typeof document !== "undefined") document.body.style.cursor = "auto";
       }}
     >
       {it.type !== "fridge" && (
@@ -148,12 +128,23 @@ function Unit({ it, k, lighting, doorHex, bodyHex, styleDef, selected, onSelect,
       {(it.type === "door" || it.type === "door-drawer" || it.type === "tall") && it.interiorLed && lighting.led && lighting.interior && (
         <LedStrip w={w - 0.1} color={lighting.ledColor} intensity={lighting.ledIntensity * 0.35} y={C.toe + bodyH - 0.05} z={-d / 2 + 0.12} />
       )}
-      {it.type !== "open" && !tall && it.shelf > 0 && (
+      {(it.type === "door" || it.type === "door-drawer") && it.shelf > 0 && (
         <Shelf w={w} d={d} y={C.toe + bodyH * 0.52} hex={bodyHex} />
       )}
 
-      {/* لت‌ها */}
+      {/* Each front is independent, including the three drawers. */}
       {positionedLeaves()}
+      {(it.type === "drawers" || it.type === "hob") && (() => {
+        const heights = drawerHeights(it.type === "hob" ? 2 : Math.max(1, it.drawers || 3), C.bodyH);
+        let top = C.toe + C.bodyH;
+        return heights.map((h, i) => {
+          const y = top - h / 2;
+          top -= h;
+          const key = `drawer-${i}`;
+          return <Drawer key={key} name={`${it.id}:${key}`} w={w - 0.006} h={h - C.gap} y={y} styleDef={styleDef} hex={doorHex} handleId={k.handle} handleFinish={k.handleFinish} open={part(key)} onClick={clickPart(key)} />;
+        });
+      })()}
+      {(it.type === "door-drawer" || it.type === "tall-oven") && <Drawer name={`${it.id}:drawer-0`} w={w - 0.006} h={it.type === "tall-oven" ? 0.47 : 0.196} y={it.type === "tall-oven" ? 0.34 : C.toe + C.bodyH - 0.1} styleDef={styleDef} hex={doorHex} handleId={k.handle} handleFinish={k.handleFinish} open={part("drawer-0")} onClick={clickPart("drawer-0")} />}
 
       {/* لوازم */}
       {it.type === "sink" && <Sink w={Math.min(w - 0.12, it.double ? 0.78 : 0.46)} double={it.double} finish={k.applianceFinish} />}
@@ -162,7 +153,7 @@ function Unit({ it, k, lighting, doorHex, bodyHex, styleDef, selected, onSelect,
       {it.type === "dishwasher" && <Dishwasher w={w - 0.02} finish={k.applianceFinish} doorHex={doorHex} />}
       {it.type === "fridge" && <Fridge w={w} finish={k.applianceFinish} doorHex={doorHex} handleFinish={k.handleFinish} />}
 
-      {(selected || hover) && (
+      {hover && (
         <SelectionFrame
           w={w + 0.01}
           h={(tall ? C.tallH : C.workH) + 0.01}
@@ -206,7 +197,7 @@ function Countertop({ spans, holes, def, thickness }) {
 
 /* ---------------- یونیت دیواری ---------------- */
 
-function WallCabinet({ it, k, lighting, doorHex, bodyHex, styleDef, wallBottom, wallH, selected, onSelect, onToggle }) {
+function WallCabinet({ it, k, lighting, doorHex, bodyHex, styleDef, wallBottom, wallH, selected, onPart }) {
   const w = it.width - 0.004;
   const d = C.wallDepth;
   const z = -C.depth / 2 + d / 2;
@@ -224,7 +215,8 @@ function WallCabinet({ it, k, lighting, doorHex, bodyHex, styleDef, wallBottom, 
 
   if (it.meta.wall === "window") return null;
 
-  const isOpen = it.open ? 1 : 0;
+  const isOpen = it.parts?.wall ?? it.open;
+  const click = (e) => { e.stopPropagation(); if (e.delta > 5) return; onPart("wall"); };
 
   return (
     <group position={[it.cx, 0, z]}>
@@ -258,6 +250,7 @@ function WallCabinet({ it, k, lighting, doorHex, bodyHex, styleDef, wallBottom, 
           {w >= 0.75 ? (
             <group position={[0, cy, d / 2 + 0.001]}>
               <DoorLeaf
+                name={`${it.id}:wall`}
                 w={w - 0.006}
                 h={wallH - 0.008}
                 styleDef={styleDef}
@@ -267,12 +260,13 @@ function WallCabinet({ it, k, lighting, doorHex, bodyHex, styleDef, wallBottom, 
                 open={isOpen}
                 liftUp
                 handleY={-wallH / 2 + 0.1}
-                onClick={onSelect}
+                onClick={click}
               />
             </group>
           ) : (
             <group position={[0, cy, d / 2 + 0.001]}>
               <DoorLeaf
+                name={`${it.id}:wall`}
                 w={w - 0.006}
                 h={wallH - 0.008}
                 styleDef={styleDef}
@@ -282,13 +276,12 @@ function WallCabinet({ it, k, lighting, doorHex, bodyHex, styleDef, wallBottom, 
                 hinge="left"
                 open={isOpen}
                 handleY={-wallH / 2 + 0.1}
-                onClick={onSelect}
+                onClick={click}
               />
             </group>
           )}
         </>
       )}
-      {selected && <SelectionFrame w={w + 0.01} h={wallH + 0.01} d={d + 0.02} y={cy} />}
     </group>
   );
 }
@@ -312,7 +305,7 @@ export function Kitchen() {
   const lighting = useStudio((s) => s.lighting);
   const selected = useStudio((s) => s.ui.selected);
   const select = useStudio((s) => s.select);
-  const toggleOpen = useStudio((s) => s.toggleOpen);
+  const togglePart = useStudio((s) => s.togglePart);
 
   const { items, width } = useMemo(() => computeLayout(units), [units]);
   const { spans, holes } = useMemo(() => computeCounter(items), [items]);
@@ -350,7 +343,7 @@ export function Kitchen() {
           styleDef={styleDef}
           selected={selected === it.id}
           onSelect={() => select(it.id)}
-          onToggle={() => toggleOpen(it.id)}
+          onPart={(key) => togglePart(it.id, key)}
         />
       ))}
 
@@ -386,7 +379,7 @@ export function Kitchen() {
             wallH={wallH}
             selected={selected === it.id}
             onSelect={() => select(it.id)}
-            onToggle={() => toggleOpen(it.id)}
+            onPart={(key) => togglePart(it.id, key)}
           />
         ))}
 

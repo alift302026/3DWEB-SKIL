@@ -10,7 +10,7 @@ export default defineConfig({
     strictPort: true,
     // The Arena preview proxies this dev server under a *.e2b.app host.
     allowedHosts: true,
-    hmr: { clientPort: 443, protocol: "wss" },
+    // Use the page host/port for HMR, including local Windows development.
   },
   preview: { host: "0.0.0.0", port: 4173, allowedHosts: true },
   build: { outDir: "dist", chunkSizeWarningLimit: 2048 },

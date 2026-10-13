@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import { MeshReflectorMaterial } from "@react-three/drei";
 import { useStudio } from "../store/useStudio.js";
@@ -14,7 +14,7 @@ function SlidingDoor({ w, h, x, z, styleDef, hex, handleId, handleFinish, open, 
   });
   return (
     <group ref={ref} position={[x, h / 2, z]}>
-      <group onClick={(e) => { e.stopPropagation(); onClick(); }}>
+      <group onClick={(e) => { e.stopPropagation(); if (e.delta > 5) return; onClick(); }}>
         <DoorLeaf w={w} h={h} styleDef={styleDef} hex={hex} handleId={handleId} handleFinish={handleFinish} hinge={dir > 0 ? "right" : "left"} open={0} verticalHandle handleY={0} />
         {mirror && <MirrorPane w={w - 0.1} h={h - 0.14} />}
       </group>
@@ -48,6 +48,8 @@ export function Wardrobe() {
   const lighting = useStudio((s) => s.lighting);
   const room = useStudio((s) => s.room);
   const [openSet, setOpenSet] = useState(() => new Set());
+  const closeNonce = useStudio((s) => s.ui.closeNonce);
+  useEffect(() => { setOpenSet(new Set()); }, [closeNonce]);
 
   const styleDef = byId(DOOR_STYLES, w.doorStyle);
   const doorHex = byId(DOOR_COLORS, w.doorColor).hex;
@@ -167,7 +169,7 @@ export function Wardrobe() {
           );
         }
         return (
-          <group key={i} position={[x, (height - 0.03) / 2, z]} onClick={() => toggle(i)}>
+          <group key={i} position={[x, (height - 0.03) / 2, z]} onClick={(e) => { e.stopPropagation(); if (e.delta > 5) return; toggle(i); }}>
             <DoorLeaf
               w={doorW - 0.006}
               h={height - 0.03}

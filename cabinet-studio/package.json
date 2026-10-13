@@ -7,10 +7,11 @@
     "dev": "vite --host 0.0.0.0 --port 5173",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
-    "test": "npm run test:logic && npm run test:ui && npm run test:scene",
+    "test": "npm run test:logic && npm run test:ui && npm run test:scene && npm run test:customer",
     "test:logic": "node scripts/logic.test.mjs",
     "test:ui": "vite build --ssr scripts/ssr-check.jsx --config vite.test.config.js --logLevel error && node .ssr-check/ssr-check.js",
-    "test:scene": "vite build --ssr scripts/scene.test.jsx --config vite.test.config.js --logLevel error && node .ssr-check/scene.test.js"
+    "test:scene": "vite build --ssr scripts/scene.test.jsx --config vite.test.config.js --logLevel error && node .ssr-check/scene.test.js",
+    "test:customer": "vite build --ssr scripts/customer.test.jsx --config vite.test.config.js --logLevel error && node .ssr-check/customer.test.js"
   },
   "dependencies": {
     "@react-three/drei": "9.114.3",

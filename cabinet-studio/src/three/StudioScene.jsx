@@ -1,16 +1,17 @@
 import * as THREE from "three";
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Environment, Lightformer, AdaptiveDpr, Preload, Html } from "@react-three/drei";
+import { OrbitControls, Environment, Lightformer, AdaptiveDpr, Preload } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette, ToneMapping } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
 
 import { useStudio } from "../store/useStudio.js";
 import { CAMERA_VIEWS } from "../data/catalog.js";
-import { computeLayout, C } from "../lib/layout.js";
 import { Floor, Walls, SideWindow, SinkWindow, CeilingLights, CounterProps, WallArt } from "./room.jsx";
-import { Kitchen, RunDimension } from "./kitchen.jsx";
+import { Kitchen } from "./kitchen.jsx";
+import { WalkControls } from "./WalkControls.jsx";
+import { ShowroomFurniture } from "./ShowroomFurniture.jsx";
 import { Wardrobe } from "./wardrobe.jsx";
 
 RectAreaLightUniformsLib.init();
@@ -32,6 +33,7 @@ function CameraRig({ controls }) {
   const view = useStudio((s) => s.ui.view);
   const nonce = useStudio((s) => s.ui.viewNonce);
   const custom = useStudio((s) => s.ui.customView);
+  const walking = useStudio((s) => s.ui.walkthrough);
   const autoRotate = useStudio((s) => s.ui.autoRotate);
 
   const from = useRef({ pos: new THREE.Vector3(), tgt: new THREE.Vector3() });
@@ -52,11 +54,12 @@ function CameraRig({ controls }) {
     to.current.tgt.set(...dest.target);
     t.current = 0;
     if (c) c.enabled = false;
-  }, [nonce, dest, camera, controls]);
+    if (walking) return;
+  }, [nonce, dest, camera, controls, walking]);
 
   useFrame((_, dt) => {
     const c = controls.current;
-    if (!c) return;
+    if (!c || walking) return;
     if (t.current < 1) {
       t.current = Math.min(1, t.current + dt / 1.35);
       const e = easeInOut(t.current);
@@ -137,39 +140,16 @@ function Effects() {
   );
 }
 
-/** برچسب اندازه روی یونیت انتخاب‌شده */
-function SelectionTag() {
-  const units = useStudio((s) => s.units);
-  const selected = useStudio((s) => s.ui.selected);
-  const room = useStudio((s) => s.room);
-  const { items, width } = useMemo(() => computeLayout(units), [units]);
-  const it = items.find((i) => i.id === selected);
-  if (!it) return null;
-  const tall = it.type === "tall" || it.type === "tall-oven" || it.type === "fridge";
-  return (
-    <Html
-      position={[-width / 2 + it.cx, (tall ? C.tallH : C.workH) + 0.22, -room.depth / 2 + C.depth / 2]}
-      center
-      distanceFactor={4.2}
-      style={{ pointerEvents: "none" }}
-    >
-      <div className="tag3d">
-        {new Intl.NumberFormat("fa-IR").format(Math.round(it.width * 100))} ×{" "}
-        {new Intl.NumberFormat("fa-IR").format(Math.round((tall ? C.tallH : C.workH) * 100))} سانتی‌متر
-      </div>
-    </Html>
-  );
-}
-
 export function StudioScene() {
   const mode = useStudio((s) => s.mode);
-  const showDims = useStudio((s) => s.ui.showDims);
+  const walking = useStudio((s) => s.ui.walkthrough);
   const controls = useRef();
 
   return (
     <>
       <color attach="background" args={["#0b0e12"]} />
       <CameraRig controls={controls} />
+      <WalkControls />
       <Lights />
       <StudioEnvironment />
 
@@ -184,8 +164,7 @@ export function StudioScene() {
           <>
             <Kitchen />
             <CounterProps />
-            {showDims && <RunDimension />}
-            <SelectionTag />
+            <ShowroomFurniture />
           </>
         ) : (
           <Wardrobe />
@@ -195,6 +174,7 @@ export function StudioScene() {
       <OrbitControls
         ref={controls}
         makeDefault
+        enabled={!walking}
         enableDamping
         dampingFactor={0.06}
         minDistance={0.9}

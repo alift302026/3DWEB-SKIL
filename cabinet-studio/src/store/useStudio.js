@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { makeUnit, uid } from "../lib/layout.js";
-import { PRESETS, CAMERA_VIEWS, byId, DOOR_STYLES, UNIT_TYPES } from "../data/catalog.js";
+import { PRESETS, CAMERA_VIEWS, byId, DOOR_STYLES, UNIT_TYPES, LED_PRESETS } from "../data/catalog.js";
 
 const initialUnits = () => [
   makeUnit("drawers", 60),
@@ -25,8 +25,8 @@ export const useStudio = create(
     (set, get) => ({
       mode: "kitchen",
       room: {
-        width: 4.6,
-        depth: 3.8,
+        width: 5.4,
+        depth: 4.8,
         height: 2.8,
         floor: "oak",
         wall: "linen",
@@ -36,10 +36,10 @@ export const useStudio = create(
         backsplashH: 0.55,
       },
       kitchen: {
-        doorStyle: "highgloss",
-        doorColor: "pure-white",
+        doorStyle: "mdf",
+        doorColor: "greige",
         bodyColor: "white",
-        counter: "calacatta",
+        counter: "nero",
         counterH: 4,
         handle: "none",
         handleFinish: "chrome",
@@ -83,7 +83,10 @@ export const useStudio = create(
         viewNonce: 0,
         autoRotate: false,
         showDims: false,
-        planOpen: true,
+        planOpen: false,
+        walkthrough: false,
+        move: {},
+        fixtureParts: {},
         effects: true,
         customView: null,
         toasts: [],
@@ -204,7 +207,12 @@ export const useStudio = create(
         }),
       toggleOpen: (id) =>
         set((s) => ({ units: s.units.map((u) => (u.id === id ? { ...u, open: !u.open } : u)) })),
-      openAll: (v) => set((s) => ({ units: s.units.map((u) => ({ ...u, open: v })) })),
+      togglePart: (id, part) => set((s) => ({
+        units: s.units.map((u) => u.id === id ? {
+          ...u, parts: { ...u.parts, [part]: !(u.parts?.[part] ?? u.open) },
+        } : u),
+      })),
+      openAll: (v) => set((s) => ({ units: s.units.map((u) => ({ ...u, open: v, parts: {} })) })),
 
       /* ---------- نماها و نماهای آماده ---------- */
       setView: (view) => set((s) => ({ ui: { ...s.ui, view, viewNonce: s.ui.viewNonce + 1 } })),
@@ -216,7 +224,7 @@ export const useStudio = create(
         set((s) => ({
           kitchen: { ...s.kitchen, doorStyle: p.doorStyle, doorColor: p.doorColor, bodyColor: p.bodyColor, counter: p.counter, handle: p.handle, handleFinish: p.handleFinish },
           room: { ...s.room, floor: p.floor, wall: p.wall },
-          lighting: { ...s.lighting, ledColor: p.led },
+          lighting: { ...s.lighting, ledColor: byId(LED_PRESETS, p.led).hex },
         }));
         get().toast(`نمای «${p.name}» اعمال شد`);
       },
@@ -238,7 +246,7 @@ export const useStudio = create(
         get().commit();
         set({
           units: initialUnits(),
-          room: { width: 4.6, depth: 3.8, height: 2.8, floor: "oak", wall: "linen", window: true, ceiling: true, backsplash: true, backsplashH: 0.55 },
+          room: { width: 5.4, depth: 4.8, height: 2.8, floor: "oak", wall: "linen", window: true, ceiling: true, backsplash: true, backsplashH: 0.55 },
           kitchen: { doorStyle: "highgloss", doorColor: "pure-white", bodyColor: "white", counter: "calacatta", counterH: 4, handle: "none", handleFinish: "chrome", applianceFinish: "steel", wallCabinets: true, wallH: 72, wallGap: 55 },
           lighting: { led: true, ledColor: "#ffca87", ledIntensity: 1.15, interior: true, night: false, sun: 1, hobFlame: false, underGlow: true },
         });
@@ -247,7 +255,7 @@ export const useStudio = create(
     }),
     {
       name: "cabinet-studio-v1",
-      version: 3,
+      version: 4,
       partialize: (s) => ({ room: s.room, kitchen: s.kitchen, units: s.units, wardrobe: s.wardrobe, lighting: s.lighting, mode: s.mode }),
       migrate: () => ({}),
       onRehydrateStorage: () => (state) => {

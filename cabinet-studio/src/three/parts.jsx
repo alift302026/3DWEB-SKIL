@@ -213,6 +213,7 @@ export function DoorLeaf({
   verticalHandle = false,
   z = 0,
   onClick,
+  name,
   onPointerOver,
   onPointerOut,
 }) {
@@ -238,9 +239,9 @@ export function DoorLeaf({
   });
 
   return (
-    <group ref={pivot} position={[liftUp ? 0 : px, liftUp ? h / 2 : 0, z]}>
+    <group ref={pivot} name={name} position={[liftUp ? 0 : px, liftUp ? h / 2 : 0, z]}>
       <group position={[liftUp ? 0 : cx, liftUp ? -h / 2 : 0, 0]}>
-        <group onClick={onClick} onPointerOver={onPointerOver} onPointerOut={onPointerOut}>
+        <group name={name ? `${name}:hit` : undefined} onClick={onClick} onPointerOver={onPointerOver} onPointerOut={onPointerOut}>
           <DoorSlab w={w} h={h} styleDef={styleDef} hex={hex} />
           <group position={[isEdge ? 0 : hx, isEdge ? h / 2 - 0.008 : hy, 0.009]}>
             <Handle kind={handle.kind} finish={handleFinish} length={isEdge ? w * 0.86 : handle.length} vertical={verticalHandle} />
